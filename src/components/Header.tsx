@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
           </a>
 
           {/* User info & action drawer inside mobile menu */}
-          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }} className="mobile-action-container">
+          <div className="mobile-action-container">
             {currentUser ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{ padding: '8px', border: '1.5px solid var(--color-dark)', backgroundColor: 'var(--color-gray-light)', fontSize: '13px' }}>
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
         
         {/* User profile details & action buttons - Desktop view */}
-        <div style={{ display: 'none' }} className="desktop-action-container">
+        <div className="desktop-action-container">
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               <div style={{ textAlign: 'right' }}>
@@ -149,7 +149,10 @@ export const Header: React.FC<HeaderProps> = ({
 
       <style>{`
         .mobile-action-container {
-          display: block;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-top: 16px;
         }
         .desktop-action-container {
           display: none;
@@ -160,7 +163,9 @@ export const Header: React.FC<HeaderProps> = ({
             display: none;
           }
           .desktop-action-container {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 16px;
           }
         }
       `}</style>

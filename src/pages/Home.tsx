@@ -67,20 +67,9 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
         
         {/* Diamond Illustration Container */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '100%', minHeight: '260px' }}>
-          <div style={{ 
-            width: '240px', 
-            height: '240px', 
-            border: '3px solid var(--color-dark)', 
-            backgroundColor: '#1E2022',
-            transform: 'rotate(45deg)',
-            overflow: 'hidden',
-            boxShadow: '6px 6px 0px var(--color-magenta)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
-          }}>
-            <div style={{ transform: 'rotate(-45deg) scale(1.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#FFFFFF', textAlign: 'center', padding: '20px' }}>
+        <div className="hero-illustration-container">
+          <div className="hero-diamond">
+            <div className="hero-diamond-content">
               <div style={{ fontSize: '20px', fontWeight: 'bold', fontFamily: 'var(--font-heading)', color: 'var(--color-magenta-light)' }}>
                 Soberania Tech
               </div>
