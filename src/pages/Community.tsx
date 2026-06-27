@@ -27,6 +27,9 @@ export const Community: React.FC = () => {
   const [postTag, setPostTag] = useState('Dúvida Técnica');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Erros de Validação (Heurística 5 e 9)
+  const [errors, setErrors] = useState<{ authorName?: string; title?: string; content?: string }>({});
+
   // Seguir Membros (Simulação)
   const [followedMembers, setFollowedMembers] = useState<string[]>([]);
 
@@ -49,7 +52,6 @@ export const Community: React.FC = () => {
   }, []);
 
   const handleLike = (postId: string) => {
-    // Simulação visual de incremento de like local
     setPosts(prev => prev.map(post => {
       if (post.id === postId) {
         return { ...post, likes: post.likes + 1 };
@@ -58,20 +60,42 @@ export const Community: React.FC = () => {
     }));
   };
 
+  const validatePostForm = () => {
+    const tempErrors: { authorName?: string; title?: string; content?: string } = {};
+    if (!authorName.trim()) {
+      tempErrors.authorName = 'O seu nome é obrigatório.';
+    }
+    if (!title.trim()) {
+      tempErrors.title = 'O título do tópico é obrigatório.';
+    } else if (title.trim().length < 5) {
+      tempErrors.title = 'O título deve ter pelo menos 5 caracteres.';
+    }
+    if (!content.trim()) {
+      tempErrors.content = 'O conteúdo da publicação é obrigatório.';
+    } else if (content.trim().length < 15) {
+      tempErrors.content = 'Explique melhor seu tópico (mínimo 15 caracteres).';
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
   const handleCreatePost = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    
+    if (!validatePostForm()) return;
 
+    setIsSubmitting(true);
     fetch('/api/community', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        author_name: authorName,
-        author_role: authorRole || 'Estudante',
-        title: title,
-        content: content,
+        author_name: authorName.trim(),
+        author_role: authorRole.trim() || 'Estudante',
+        title: title.trim(),
+        content: content.trim(),
         tags: [postTag]
       })
     })
@@ -86,12 +110,13 @@ export const Community: React.FC = () => {
         setAuthorRole('');
         setTitle('');
         setContent('');
+        setErrors({});
         fetchPosts(); // Recarregar feed
       })
       .catch(err => {
         console.error('Erro ao criar post:', err);
         setIsSubmitting(false);
-        alert('Erro ao publicar. Tente novamente.');
+        alert('Erro ao publicar. Verifique sua conexão e tente novamente.');
       });
   };
 
@@ -105,21 +130,22 @@ export const Community: React.FC = () => {
     if (filter === 'popular') {
       return [...posts].sort((a, b) => b.likes - a.likes);
     }
-    return posts; // API já retorna ordenado por recentes
+    return posts;
   };
 
   return (
     <div className="community-page">
       {/* Title block */}
-      <div className="flex-between mb-32" style={{ borderBottom: '3px solid var(--color-dark)', paddingBottom: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-          <h2 style={{ fontSize: '36px' }}>Puxa a cadeira.</h2>
-          <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="flex-between mb-32" style={{ borderBottom: '3px solid var(--color-dark)', paddingBottom: '16px', flexWrap: 'wrap', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <h2 style={{ fontSize: '32px' }}>Puxa a cadeira.</h2>
+          <div style={{ display: 'flex', gap: '4px' }}>
             <button 
               className="btn" 
               style={{ 
-                padding: '6px 16px', 
-                fontSize: '13px', 
+                padding: '6px 12px', 
+                fontSize: '12px', 
+                minHeight: '36px',
                 backgroundColor: filter === 'recent' ? 'var(--color-white)' : 'transparent',
                 border: filter === 'recent' ? 'var(--border-main)' : 'none',
                 boxShadow: filter === 'recent' ? 'var(--shadow-sm)' : 'none'
@@ -131,8 +157,9 @@ export const Community: React.FC = () => {
             <button 
               className="btn" 
               style={{ 
-                padding: '6px 16px', 
-                fontSize: '13px', 
+                padding: '6px 12px', 
+                fontSize: '12px', 
+                minHeight: '36px',
                 backgroundColor: filter === 'popular' ? 'var(--color-white)' : 'transparent',
                 border: filter === 'popular' ? 'var(--border-main)' : 'none',
                 boxShadow: filter === 'popular' ? 'var(--shadow-sm)' : 'none'
@@ -144,20 +171,21 @@ export const Community: React.FC = () => {
           </div>
         </div>
 
-        <button className="btn btn-primary" onClick={() => setShowCreateModal(true)}>
+        <button className="btn btn-primary" onClick={() => { setShowCreateModal(true); setErrors({}); }}>
           <Plus size={18} />
           <span>Novo Tópico</span>
         </button>
       </div>
 
-      {/* Main Grid: Feed + Sidebar */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '32px', alignItems: 'start' }}>
+      {/* Main Grid: Feed + Sidebar (Responsivo com community-layout) */}
+      <div className="community-layout">
         {/* Feed Columns */}
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {loading ? (
             Array.from({ length: 2 }).map((_, i) => (
-              <div key={i} className="nb-card" style={{ height: '180px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                Carregando postagens...
+              <div key={i} className="nb-card skeleton-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div className="spinner"></div>
+                <div style={{ marginTop: '16px', fontSize: '14px', fontWeight: 700 }}>Carregando fórum...</div>
               </div>
             ))
           ) : getSortedPosts().length === 0 ? (
@@ -168,11 +196,11 @@ export const Community: React.FC = () => {
             getSortedPosts().map(post => (
               <article key={post.id} className="nb-card">
                 {/* Author Info */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <div style={{ 
-                      width: '40px', 
-                      height: '40px', 
+                      width: '36px', 
+                      height: '36px', 
                       borderRadius: '50%', 
                       border: '2px solid var(--color-dark)', 
                       backgroundColor: 'var(--color-gray-light)',
@@ -180,21 +208,21 @@ export const Community: React.FC = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: 'bold',
-                      fontSize: '14px'
+                      fontSize: '13px'
                     }}>
                       {post.author_name.charAt(0)}
                     </div>
                     <div>
-                      <span style={{ fontWeight: 700, fontSize: '15px' }}>{post.author_name}</span>
-                      <span style={{ fontSize: '12px', color: 'var(--color-gray)', marginLeft: '8px' }}>
+                      <span style={{ fontWeight: 700, fontSize: '14px' }}>{post.author_name}</span>
+                      <span style={{ fontSize: '11px', color: 'var(--color-gray)', marginLeft: '8px' }}>
                         {post.author_role}
                       </span>
                     </div>
                   </div>
                   
-                  <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ display: 'flex', gap: '6px' }}>
                     {post.tags.map(tag => (
-                      <span key={tag} className="nb-badge badge-magenta" style={{ fontSize: '10px', padding: '2px 8px' }}>
+                      <span key={tag} className="nb-badge badge-magenta" style={{ fontSize: '9px', padding: '2px 6px' }}>
                         {tag}
                       </span>
                     ))}
@@ -202,29 +230,30 @@ export const Community: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>{post.title}</h3>
-                <p style={{ fontSize: '14px', color: 'var(--color-gray-dark)', marginBottom: '20px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>{post.title}</h3>
+                <p style={{ fontSize: '14px', color: 'var(--color-gray-dark)', marginBottom: '16px', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
                   {post.content}
                 </p>
 
                 {/* Footer details */}
-                <div style={{ display: 'flex', justifySelf: 'start', gap: '24px', fontSize: '13px', color: 'var(--color-gray)', borderTop: '1px solid var(--color-gray-light)', paddingTop: '12px', width: '100%' }}>
+                <div style={{ display: 'flex', justifySelf: 'start', gap: '20px', fontSize: '12px', color: 'var(--color-gray)', borderTop: '1px solid var(--color-gray-light)', paddingTop: '12px', width: '100%', alignItems: 'center' }}>
                   <button 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', fontWeight: 600 }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', fontWeight: 600, minHeight: '32px' }}
                     onClick={() => handleLike(post.id)}
                   >
-                    <Heart size={16} className="text-magenta" style={{ fill: post.likes > 42 ? 'var(--color-magenta)' : 'none' }} />
+                    <Heart size={15} className="text-magenta" style={{ fill: post.likes > 42 ? 'var(--color-magenta)' : 'none' }} />
                     <span>{post.likes} Likes</span>
                   </button>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}>
-                    <MessageSquare size={16} className="text-blue" />
+                    <MessageSquare size={15} className="text-blue" />
                     <span>{post.responses} Respostas</span>
                   </div>
                   <button 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', fontWeight: 600, marginLeft: 'auto' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', color: 'inherit', fontWeight: 600, marginLeft: 'auto', minHeight: '32px' }}
                     onClick={() => alert('Link copiado para a área de transferência!')}
+                    aria-label="Compartilhar"
                   >
-                    <Share2 size={16} />
+                    <Share2 size={15} />
                   </button>
                 </div>
               </article>
@@ -293,8 +322,9 @@ export const Community: React.FC = () => {
                       </div>
                     </div>
                     <button 
-                      style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', minHeight: '32px', minWidth: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       onClick={() => toggleFollow(member.name)}
+                      aria-label={`Seguir ${member.name}`}
                     >
                       {isFollowed ? (
                         <UserCheck size={18} className="text-blue" />
@@ -314,7 +344,7 @@ export const Community: React.FC = () => {
       {showCreateModal && (
         <div className="modal-overlay" onClick={() => { if (!isSubmitting) setShowCreateModal(false); }}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <button className="modal-close" onClick={() => setShowCreateModal(false)} disabled={isSubmitting}>X</button>
+            <button className="modal-close" onClick={() => setShowCreateModal(false)} disabled={isSubmitting} aria-label="Fechar">X</button>
             <h3 style={{ fontSize: '24px', marginBottom: '16px' }}>Criar Novo Tópico</h3>
             
             <form onSubmit={handleCreatePost} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -322,13 +352,16 @@ export const Community: React.FC = () => {
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>Seu Nome</label>
                 <input 
                   type="text" 
-                  required 
-                  className="nb-input" 
+                  className={`nb-input ${errors.authorName ? 'input-error' : ''}`}
                   placeholder="Seu nome completo ou social"
                   value={authorName}
-                  onChange={(e) => setAuthorName(e.target.value)}
+                  onChange={(e) => {
+                    setAuthorName(e.target.value);
+                    if (errors.authorName) setErrors(prev => ({ ...prev, authorName: undefined }));
+                  }}
                   disabled={isSubmitting}
                 />
+                {errors.authorName && <div className="error-message">{errors.authorName}</div>}
               </div>
 
               <div>
@@ -343,16 +376,18 @@ export const Community: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '12px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>Título do Tópico</label>
                   <input 
                     type="text" 
-                    required 
-                    className="nb-input" 
-                    placeholder="Título resumido da sua publicação"
+                    className={`nb-input ${errors.title ? 'input-error' : ''}`}
+                    placeholder="Título da publicação"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (errors.title) setErrors(prev => ({ ...prev, title: undefined }));
+                    }}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -371,19 +406,23 @@ export const Community: React.FC = () => {
                   </select>
                 </div>
               </div>
+              {errors.title && <div className="error-message">{errors.title}</div>}
 
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>Conteúdo da Publicação</label>
                 <textarea 
-                  required 
                   rows={6}
-                  className="nb-textarea" 
+                  className={`nb-textarea ${errors.content ? 'input-error' : ''}`}
                   placeholder="Escreva aqui sua dúvida, conquista ou relato..."
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => {
+                    setContent(e.target.value);
+                    if (errors.content) setErrors(prev => ({ ...prev, content: undefined }));
+                  }}
                   disabled={isSubmitting}
                   style={{ resize: 'vertical' }}
                 />
+                {errors.content && <div className="error-message">{errors.content}</div>}
               </div>
 
               <button 

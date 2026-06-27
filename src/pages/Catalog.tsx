@@ -22,6 +22,7 @@ export const Catalog: React.FC = () => {
   
   // Filtros
   const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   
   // Inscrição / Modal
   const [selectedBootcamp, setSelectedBootcamp] = useState<Bootcamp | null>(null);
@@ -31,6 +32,9 @@ export const Catalog: React.FC = () => {
   const [githubUrl, setGithubUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Erros de Validação (Heurística 5 e 9)
+  const [errors, setErrors] = useState<{ userName?: string; email?: string }>({});
 
   useEffect(() => {
     fetch('/api/bootcamps')
@@ -50,13 +54,11 @@ export const Catalog: React.FC = () => {
     if (selectedTracks.length === 0) {
       setFilteredBootcamps(bootcamps);
     } else {
-      // Filtrar se pelo menos uma tag do bootcamp bater com alguma das trilhas selecionadas
       const filtered = bootcamps.filter(b => {
         return b.tags.some(tag => {
           const tagLower = tag.toLowerCase();
           return selectedTracks.some(track => {
             const trackLower = track.toLowerCase();
-            // Mapeamentos de trilha
             if (trackLower === 'frontend') return tagLower.includes('react') || tagLower.includes('html') || tagLower.includes('javascript') || tagLower.includes('vue');
             if (trackLower === 'backend') return tagLower.includes('node') || tagLower.includes('postgresql') || tagLower.includes('docker') || tagLower.includes('sql');
             if (trackLower === 'data science') return tagLower.includes('python') || tagLower.includes('pandas') || tagLower.includes('sql');
@@ -75,9 +77,30 @@ export const Catalog: React.FC = () => {
     );
   };
 
+  const validateForm = () => {
+    const tempErrors: { userName?: string; email?: string } = {};
+    if (!userName.trim()) {
+      tempErrors.userName = 'O nome social ou completo é obrigatório.';
+    } else if (userName.trim().length < 3) {
+      tempErrors.userName = 'O nome deve conter pelo menos 3 caracteres.';
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email) {
+      tempErrors.email = 'O e-mail é obrigatório.';
+    } else if (!emailRegex.test(email)) {
+      tempErrors.email = 'Insira um e-mail válido (exemplo@dominio.com).';
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBootcamp) return;
+
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
     fetch('/api/applications', {
@@ -86,8 +109,8 @@ export const Catalog: React.FC = () => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        user_name: userName,
-        email: email,
+        user_name: userName.trim(),
+        email: email.trim(),
         bootcamp_id: selectedBootcamp.id
       })
     })
@@ -101,15 +124,15 @@ export const Catalog: React.FC = () => {
         setUserName('');
         setEmail('');
         setGithubUrl('');
+        setErrors({});
       })
       .catch(err => {
         console.error('Erro na inscrição:', err);
         setIsSubmitting(false);
-        alert('Erro ao realizar inscrição. Tente novamente.');
+        alert('Erro de conexão ao realizar inscrição. Por favor, tente novamente mais tarde.');
       });
   };
 
-  // Retorna o ícone correto com base no título do bootcamp
   const getBootcampIcon = (title: string) => {
     const titleLower = title.toLowerCase();
     if (titleLower.includes('fullstack') || titleLower.includes('frontend')) {
@@ -125,28 +148,40 @@ export const Catalog: React.FC = () => {
     <div className="catalog-page">
       {/* Intro banner */}
       <section className="nb-card mb-32" style={{ borderLeft: '8px solid var(--color-magenta)' }}>
-        <h2 style={{ fontSize: '32px', marginBottom: '8px' }}>Bootcamps Transformadores</h2>
-        <p style={{ color: 'var(--color-gray-dark)', fontSize: '16px' }}>
+        <h2 style={{ fontSize: '28px', marginBottom: '8px' }}>Bootcamps Transformadores</h2>
+        <p style={{ color: 'var(--color-gray-dark)', fontSize: '15px' }}>
           Forjando soberania tecnológica com a força da nossa comunidade. Nossos programas intensivos são desenhados para a comunidade trans e dissidente de gênero, unindo inovação técnica com impacto social real e vagas garantidas de contratação.
         </p>
       </section>
 
-      {/* Main Grid: Sidebar + List */}
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '32px', alignItems: 'start' }}>
+      {/* Mobile Filter Button (Heurística 7: Flexibilidade e eficiência) */}
+      <div className="mobile-filter-btn mb-16">
+        <button 
+          className="btn btn-secondary" 
+          style={{ width: '100%' }}
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+        >
+          <Filter size={18} />
+          <span>{showMobileFilters ? 'Ocultar Filtros' : 'Filtrar por Trilhas'}</span>
+        </button>
+      </div>
+
+      {/* Main Grid: Sidebar + List (Responsivo com catalog-layout) */}
+      <div className="catalog-layout">
         {/* Sidebar Filters */}
-        <aside className="nb-card" style={{ padding: '20px' }}>
+        <aside className={`nb-card filter-sidebar ${showMobileFilters ? 'open' : ''}`} style={{ padding: '20px' }}>
           <h3 style={{ fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px', borderBottom: '2px solid var(--color-dark)', paddingBottom: '12px', marginBottom: '16px' }}>
             <Filter size={18} />
             <span>Trilhas</span>
           </h3>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {['Frontend', 'Backend', 'Data Science', 'Design & UX'].map(track => {
               const isChecked = selectedTracks.includes(track);
               return (
                 <div 
                   key={track} 
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', minHeight: '32px' }}
                   onClick={() => toggleTrack(track)}
                 >
                   {isChecked ? (
@@ -160,10 +195,10 @@ export const Catalog: React.FC = () => {
             })}
           </div>
 
-          {selectedTracks.length > 0 && (
+          {(selectedTracks.length > 0) && (
             <button 
               className="btn btn-secondary" 
-              style={{ marginTop: '20px', width: '100%', padding: '8px 12px', fontSize: '12px' }}
+              style={{ marginTop: '20px', width: '100%', padding: '8px 12px', fontSize: '12px', minHeight: '36px' }}
               onClick={() => setSelectedTracks([])}
             >
               Limpar Filtros
@@ -174,79 +209,95 @@ export const Catalog: React.FC = () => {
         {/* Bootcamps list */}
         <main>
           {loading ? (
-            <div className="grid-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+            <div className="grid-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="nb-card" style={{ height: '240px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  Carregando oportunidades...
+                <div key={i} className="nb-card skeleton-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div className="spinner"></div>
+                  <div style={{ marginTop: '16px', fontSize: '14px', fontWeight: 700 }}>Carregando bootcamps...</div>
                 </div>
               ))}
             </div>
           ) : filteredBootcamps.length === 0 ? (
             <div className="nb-card" style={{ textAlign: 'center', padding: '48px' }}>
               <p style={{ fontWeight: 600, color: 'var(--color-gray-dark)' }}>Nenhum bootcamp encontrado para as trilhas selecionadas.</p>
+              <button className="btn btn-secondary" style={{ marginTop: '16px' }} onClick={() => setSelectedTracks([])}>
+                Ver Todos os Bootcamps
+              </button>
             </div>
           ) : (
-            <div className="grid-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px' }}>
-              {filteredBootcamps.map(b => (
-                <div 
-                  key={b.id} 
-                  className="nb-card nb-card-hover" 
-                  style={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    minHeight: '300px'
-                  }}
-                >
-                  <div>
-                    <div className="flex-between mb-16">
-                      <span className={`nb-badge ${b.status === 'aberto' ? 'badge-magenta' : b.status === 'andamento' ? 'badge-blue' : 'badge-orange'}`}>
-                        {b.status === 'aberto' ? 'Inscrições Abertas' : b.status === 'andamento' ? 'Em Andamento' : 'Em Breve'}
-                      </span>
-                      {getBootcampIcon(b.title)}
-                    </div>
-
-                    <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>{b.title}</h3>
-                    <p style={{ fontSize: '13px', color: 'var(--color-gray-dark)', marginBottom: '16px', minHeight: '40px' }}>
-                      {b.description}
-                    </p>
-
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
-                      {b.tags.map(t => (
-                        <span key={t} className="nb-badge" style={{ fontSize: '10px', padding: '2px 6px' }}>{t}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ borderTop: '2px solid var(--color-gray-light)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                        <Clock size={12} />
-                        {b.duration}
-                      </span>
-                      <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                        <MapPin size={12} />
-                        {b.location}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        className="btn btn-secondary" 
-                        style={{ flex: 1, padding: '8px', fontSize: '12px' }}
-                        onClick={() => {
-                          setSelectedBootcamp(b);
-                          setShowApplyModal(true);
-                          setSubmitSuccess(false);
-                        }}
-                      >
-                        <Eye size={14} />
-                        <span>Detalhes</span>
-                      </button>
-                    </div>
-                  </div>
+            <div>
+              {selectedTracks.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700 }}>Filtros ativos:</span>
+                  {selectedTracks.map(t => (
+                    <span key={t} className="nb-badge badge-magenta" style={{ fontSize: '10px' }}>{t}</span>
+                  ))}
                 </div>
-              ))}
+              )}
+              
+              <div className="grid-3">
+                {filteredBootcamps.map(b => (
+                  <div 
+                    key={b.id} 
+                    className="nb-card nb-card-hover" 
+                    style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      justifyContent: 'space-between',
+                      minHeight: '300px'
+                    }}
+                  >
+                    <div>
+                      <div className="flex-between mb-16">
+                        <span className={`nb-badge ${b.status === 'aberto' ? 'badge-magenta' : b.status === 'andamento' ? 'badge-blue' : 'badge-orange'}`}>
+                          {b.status === 'aberto' ? 'Inscrições Abertas' : b.status === 'andamento' ? 'Em Andamento' : 'Em Breve'}
+                        </span>
+                        {getBootcampIcon(b.title)}
+                      </div>
+
+                      <h3 style={{ fontSize: '18px', marginBottom: '8px' }}>{b.title}</h3>
+                      <p style={{ fontSize: '13px', color: 'var(--color-gray-dark)', marginBottom: '16px', minHeight: '40px' }}>
+                        {b.description}
+                      </p>
+
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '16px' }}>
+                        {b.tags.map(t => (
+                          <span key={t} className="nb-badge" style={{ fontSize: '10px', padding: '2px 6px' }}>{t}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div style={{ borderTop: '2px solid var(--color-gray-light)', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                          <Clock size={12} />
+                          {b.duration}
+                        </span>
+                        <span style={{ fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
+                          <MapPin size={12} />
+                          {b.location}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          className="btn btn-secondary" 
+                          style={{ flex: 1, padding: '8px', fontSize: '12px' }}
+                          onClick={() => {
+                            setSelectedBootcamp(b);
+                            setShowApplyModal(true);
+                            setSubmitSuccess(false);
+                            setErrors({});
+                          }}
+                        >
+                          <Eye size={14} />
+                          <span>Detalhes</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </main>
@@ -256,16 +307,16 @@ export const Catalog: React.FC = () => {
       {showApplyModal && selectedBootcamp && (
         <div className="modal-overlay" onClick={() => { if (!isSubmitting) setShowApplyModal(false); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
-            <button className="modal-close" onClick={() => setShowApplyModal(false)} disabled={isSubmitting}>X</button>
+            <button className="modal-close" onClick={() => setShowApplyModal(false)} disabled={isSubmitting} aria-label="Fechar">X</button>
             
             {submitSuccess ? (
               <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                <h3 style={{ fontSize: '28px', color: 'var(--color-magenta)', marginBottom: '12px' }}>Inscrição Concluída!</h3>
-                <p style={{ color: 'var(--color-gray-dark)', marginBottom: '24px', fontSize: '16px' }}>
+                <h3 style={{ fontSize: '26px', color: 'var(--color-magenta)', marginBottom: '12px' }}>Inscrição Concluída!</h3>
+                <p style={{ color: 'var(--color-gray-dark)', marginBottom: '24px', fontSize: '15px' }}>
                   Sua inscrição no bootcamp <strong>{selectedBootcamp.title}</strong> foi realizada. 
                   O status e a evolução da sua candidatura podem ser acompanhados na aba <strong>Contratações</strong>.
                 </p>
-                <button className="btn btn-primary" onClick={() => setShowApplyModal(false)}>
+                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => setShowApplyModal(false)}>
                   Voltar ao Catálogo
                 </button>
               </div>
@@ -275,16 +326,16 @@ export const Catalog: React.FC = () => {
                   {selectedBootcamp.status === 'aberto' ? 'Inscrições Abertas' : selectedBootcamp.status === 'andamento' ? 'Em Andamento' : 'Em Breve'}
                 </span>
                 
-                <h3 style={{ fontSize: '26px', marginBottom: '8px' }}>{selectedBootcamp.title}</h3>
-                <p style={{ fontSize: '15px', color: 'var(--color-gray-dark)', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '24px', marginBottom: '8px' }}>{selectedBootcamp.title}</h3>
+                <p style={{ fontSize: '14px', color: 'var(--color-gray-dark)', marginBottom: '16px' }}>
                   {selectedBootcamp.description}
                 </p>
 
                 <div style={{ backgroundColor: 'var(--color-blue-light)', border: '2px dashed var(--color-blue)', padding: '12px', marginBottom: '20px' }}>
-                  <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-blue-dark)' }}>
+                  <p style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-blue-dark)', marginBottom: '4px' }}>
                     Oportunidade de Contratação:
                   </p>
-                  <p style={{ fontSize: '13px', color: 'var(--color-dark)' }}>
+                  <p style={{ fontSize: '13px', color: 'var(--color-dark)', margin: 0 }}>
                     Ao concluir este bootcamp com aproveitamento, você concorre diretamente a uma das <strong>{selectedBootcamp.hiring_positions} vagas garantidas</strong> de contratação imediata pelo parceiro.
                   </p>
                 </div>
@@ -297,26 +348,32 @@ export const Catalog: React.FC = () => {
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>Nome Completo / Social</label>
                       <input 
                         type="text" 
-                        required 
-                        className="nb-input" 
+                        className={`nb-input ${errors.userName ? 'input-error' : ''}`}
                         placeholder="Seu nome"
                         value={userName}
-                        onChange={(e) => setUserName(e.target.value)}
+                        onChange={(e) => {
+                          setUserName(e.target.value);
+                          if (errors.userName) setErrors(prev => ({ ...prev, userName: undefined }));
+                        }}
                         disabled={isSubmitting}
                       />
+                      {errors.userName && <div className="error-message">{errors.userName}</div>}
                     </div>
 
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>E-mail para Contato</label>
                       <input 
                         type="email" 
-                        required 
-                        className="nb-input" 
+                        className={`nb-input ${errors.email ? 'input-error' : ''}`}
                         placeholder="seu.email@exemplo.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
+                        }}
                         disabled={isSubmitting}
                       />
+                      {errors.email && <div className="error-message">{errors.email}</div>}
                     </div>
 
                     <div>

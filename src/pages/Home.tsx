@@ -39,23 +39,23 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
 
   return (
     <div className="home-page">
-      {/* Hero Section */}
-      <section className="nb-card mb-32" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center', padding: '40px' }}>
+      {/* Hero Section (Responsivo através da classe hero-layout) */}
+      <section className="nb-card hero-layout mb-32">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'flex-start' }}>
           <div className="nb-badge badge-magenta" style={{ fontSize: '12px' }}>
             Tecnologia com Raízes
           </div>
           
-          <h1 style={{ fontSize: '48px', lineHeight: '1.1', margin: 0 }}>
+          <h1 style={{ fontSize: '42px', lineHeight: '1.1', margin: 0 }}>
             Bootcamps <span className="text-magenta">Transformadores</span>
           </h1>
           
-          <p style={{ fontSize: '18px', color: 'var(--color-gray-dark)', margin: 0 }}>
+          <p style={{ fontSize: '16px', color: 'var(--color-gray-dark)', margin: 0 }}>
             Forjando a soberania tecnológica através da identidade trans e da cultura nordestina. 
             Aprenda as habilidades do futuro honrando o conhecimento ancestral e com vaga garantida ou entrevista direta em empresas parceiras.
           </p>
           
-          <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '12px', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={() => onNavigate('bootcamps')}>
               <Compass size={18} />
               <span>Ver Bootcamps</span>
@@ -67,24 +67,24 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </div>
         
         {/* Diamond Illustration Container */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '100%', minHeight: '300px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '100%', minHeight: '260px' }}>
           <div style={{ 
-            width: '280px', 
-            height: '280px', 
+            width: '240px', 
+            height: '240px', 
             border: '3px solid var(--color-dark)', 
             backgroundColor: '#1E2022',
             transform: 'rotate(45deg)',
             overflow: 'hidden',
-            boxShadow: '8px 8px 0px var(--color-magenta)',
+            boxShadow: '6px 6px 0px var(--color-magenta)',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center'
           }}>
-            <div style={{ transform: 'rotate(-45deg) scale(1.4)', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#FFFFFF', textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: '24px', fontWeight: 'bold', fontFamily: 'var(--font-heading)', color: 'var(--color-magenta-light)' }}>
+            <div style={{ transform: 'rotate(-45deg) scale(1.2)', display: 'flex', flexDirection: 'column', alignItems: 'center', color: '#FFFFFF', textAlign: 'center', padding: '20px' }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', fontFamily: 'var(--font-heading)', color: 'var(--color-magenta-light)' }}>
                 Soberania Tech
               </div>
-              <div style={{ fontSize: '12px', marginTop: '8px', color: '#9CA3AF', letterSpacing: '2px', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: '10px', marginTop: '8px', color: '#9CA3AF', letterSpacing: '2px', textTransform: 'uppercase' }}>
                 Orgulho & Código
               </div>
             </div>
@@ -93,13 +93,13 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
       </section>
 
       {/* Bootcamps em Aberto Title */}
-      <div className="flex-between mb-24">
+      <div className="flex-between mb-24" style={{ flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '32px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <BookOpen size={28} className="text-magenta" />
+          <h2 style={{ fontSize: '28px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <BookOpen size={24} className="text-magenta" />
             <span>Bootcamps em Aberto</span>
           </h2>
-          <p style={{ color: 'var(--color-gray)' }}>Vagas limitadas para a próxima turma com contratação inclusiva.</p>
+          <p style={{ color: 'var(--color-gray)', fontSize: '14px' }}>Vagas limitadas para a próxima turma com contratação inclusiva.</p>
         </div>
         <button 
           className="btn btn-secondary" 
@@ -111,24 +111,20 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         </button>
       </div>
 
-      {/* Bootcamps Grid */}
+      {/* Bootcamps Grid (Skeleton Loaders para Heurística 1) */}
       <section className="grid-3 mb-32">
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="nb-card" style={{ height: '320px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              Carregando oportunidade...
+            <div key={i} className="nb-card skeleton-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+              <div className="spinner"></div>
+              <div style={{ marginTop: '16px', fontSize: '14px', fontWeight: 700 }}>Carregando oportunidade...</div>
             </div>
           ))
         ) : (
           bootcamps.map((b, index) => {
-            // Cores do lado esquerdo do card
             const borderColors = ['#005691', '#B33B72', '#D97706'];
             const accentColor = borderColors[index % borderColors.length];
-            const badgeClasses = [
-              'badge-blue',
-              'badge-magenta',
-              'badge-orange'
-            ];
+            const badgeClasses = ['badge-blue', 'badge-magenta', 'badge-orange'];
             const badgeClass = badgeClasses[index % badgeClasses.length];
 
             return (
@@ -148,13 +144,13 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
                     <span className={`nb-badge ${badgeClass}`}>
                       {b.status === 'aberto' ? 'Inscrições Abertas' : b.status === 'andamento' ? 'Em Andamento' : 'Em Breve'}
                     </span>
-                    <span style={{ fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-gray-dark)' }}>
+                    <span style={{ fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--color-gray-dark)' }}>
                       <MapPin size={14} />
                       {b.location}
                     </span>
                   </div>
                   
-                  <h3 style={{ fontSize: '22px', marginBottom: '8px' }}>{b.title}</h3>
+                  <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>{b.title}</h3>
                   <p style={{ fontSize: '14px', color: 'var(--color-gray-dark)', marginBottom: '16px' }}>{b.description}</p>
                   
                   <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -185,19 +181,19 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         )}
       </section>
 
-      {/* Two columns section (Community and Testimonial) */}
-      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '32px' }}>
+      {/* Two columns section (Responsivo através da classe home-split-layout) */}
+      <section className="home-split-layout">
         {/* Left card */}
-        <div className="nb-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '340px' }}>
+        <div className="nb-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '320px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div className="nb-badge badge-magenta" style={{ padding: '8px' }}>
                 <Award size={20} className="text-magenta" />
               </div>
-              <h3 style={{ fontSize: '28px' }}>Tecnologia Feita à Mão. Comunidade de Verdade.</h3>
+              <h3 style={{ fontSize: '24px' }}>Tecnologia Feita à Mão. Comunidade de Verdade.</h3>
             </div>
             
-            <p style={{ color: 'var(--color-gray-dark)', fontSize: '16px', marginBottom: '24px' }}>
+            <p style={{ color: 'var(--color-gray-dark)', fontSize: '14px', marginBottom: '24px' }}>
               Acreditamos que o código é poesia e a arquitetura é artesanato. Nossa comunidade apoia o desenvolvimento técnico de pessoas trans e aliadas, criando redes de apoio que vão além do terminal e proporcionando conexões reais com o mercado de trabalho.
             </p>
           </div>
@@ -206,7 +202,7 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             href="#" 
             onClick={(e) => { e.preventDefault(); setShowManifesto(true); }}
             className="text-magenta" 
-            style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', fontSize: '14px' }}
+            style={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', fontSize: '13px' }}
           >
             <span>Leia o Manifesto Cordel</span>
             <ArrowRight size={16} />
@@ -216,8 +212,8 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Right card (Testimonial) */}
         <div className="nb-card" style={{ backgroundColor: 'var(--color-magenta)', color: '#FFFFFF', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', gap: '20px', padding: '32px' }}>
           <div style={{ 
-            width: '90px', 
-            height: '90px', 
+            width: '80px', 
+            height: '80px', 
             borderRadius: '50%', 
             border: '2px solid #FFFFFF', 
             overflow: 'hidden',
@@ -229,20 +225,20 @@ export const Home: React.FC<HomeProps> = ({ onNavigate }) => {
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           </div>
-          <p style={{ fontSize: '16px', fontStyle: 'italic', fontWeight: 500, lineHeight: '1.6' }}>
+          <p style={{ fontSize: '15px', fontStyle: 'italic', fontWeight: 500, lineHeight: '1.6' }}>
             "A EloTech não me deu apenas um curso de React, me deu uma guilda para chamar de minha e a oportunidade de entrar no Nubank como desenvolvedora."
           </p>
-          <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-magenta-light)' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--color-magenta-light)' }}>
             — MARIA S., DEV FRONTEND
           </div>
         </div>
       </section>
 
-      {/* Manifesto Modal */}
+      {/* Manifesto Modal (Heurística 3: fechamento fácil) */}
       {showManifesto && (
         <div className="modal-overlay" onClick={() => setShowManifesto(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowManifesto(false)}>X</button>
+            <button className="modal-close" onClick={() => setShowManifesto(false)} aria-label="Fechar">X</button>
             <h3 style={{ fontSize: '24px', marginBottom: '16px', color: 'var(--color-magenta)' }}>Manifesto Cordel da Sobrevivência Tecnológica</h3>
             <div style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap', lineHeight: '1.8', fontSize: '14px', color: 'var(--color-gray-dark)' }}>
               {`No sertão da internet escura,
@@ -268,7 +264,7 @@ Com as linhas do nosso viver,
 Ninguém vai nos fazer esquecer
 Que temos em nós a revolução.`}
             </div>
-            <button className="btn btn-primary" style={{ marginTop: '24px' }} onClick={() => setShowManifesto(false)}>
+            <button className="btn btn-primary" style={{ marginTop: '24px', width: '100%' }} onClick={() => setShowManifesto(false)}>
               Compreendi
             </button>
           </div>

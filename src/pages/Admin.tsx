@@ -52,7 +52,7 @@ export const Admin: React.FC = () => {
       body: JSON.stringify({
         id: editingApp.id,
         status: newStatus,
-        feedback: newFeedback
+        feedback: newFeedback.trim()
       })
     })
       .then(res => {
@@ -67,7 +67,7 @@ export const Admin: React.FC = () => {
       .catch(err => {
         console.error('Erro ao atualizar status:', err);
         setIsUpdating(false);
-        alert('Erro ao atualizar. Tente novamente.');
+        alert('Erro ao salvar alterações no status. Tente novamente.');
       });
   };
 
@@ -86,7 +86,6 @@ export const Admin: React.FC = () => {
     }
   };
 
-  // Estatísticas para os cards superiores
   const totalApps = applications.length;
   const activeStudents = applications.filter(a => a.status === 'cursando').length;
   const totalHired = applications.filter(a => a.status === 'contratada').length;
@@ -95,99 +94,104 @@ export const Admin: React.FC = () => {
     <div className="admin-page">
       {/* Upper stats banner */}
       <section className="nb-card mb-32" style={{ borderLeft: '8px solid var(--color-dark)' }}>
-        <h2 style={{ fontSize: '32px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Briefcase size={28} className="text-magenta" />
+        <h2 style={{ fontSize: '28px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <Briefcase size={24} className="text-magenta" />
           <span>Painel de Empregabilidade Trans</span>
         </h2>
-        <p style={{ color: 'var(--color-gray-dark)', fontSize: '16px' }}>
+        <p style={{ color: 'var(--color-gray-dark)', fontSize: '15px' }}>
           Acompanhamento e evolução profissional. Empresas parceiras atualizam o status das alunas desde a matrícula no bootcamp até a contratação formal.
         </p>
       </section>
 
-      {/* Stats Cards Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px', marginBottom: '32px' }}>
+      {/* Stats Cards Row (Responsivo por CSS) */}
+      <div className="mb-32" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
         <div className="nb-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-gray)' }}>Total de Inscrições</div>
-          <div style={{ fontSize: '36px', fontWeight: 800 }}>{totalApps}</div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-gray)' }}>Total de Inscrições</div>
+          <div style={{ fontSize: '32px', fontWeight: 800 }}>{totalApps}</div>
         </div>
         <div className="nb-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '6px solid var(--color-blue)' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--color-blue)' }}>Candidatas Cursando</div>
-          <div style={{ fontSize: '36px', fontWeight: 800 }}>{activeStudents}</div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--color-blue)' }}>Candidatas Cursando</div>
+          <div style={{ fontSize: '32px', fontWeight: 800 }}>{activeStudents}</div>
         </div>
         <div className="nb-card" style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderLeft: '6px solid #22C55E' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700, color: '#22C55E' }}>Contratadas pelas Parceiras</div>
-          <div style={{ fontSize: '36px', fontWeight: 800, color: '#22C55E' }}>{totalHired}</div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#22C55E' }}>Contratadas pelas Parceiras</div>
+          <div style={{ fontSize: '32px', fontWeight: 800, color: '#22C55E' }}>{totalHired}</div>
         </div>
       </div>
 
-      {/* Applications Table */}
-      <div className="nb-card" style={{ padding: 0, overflowX: 'auto' }}>
-        <div style={{ padding: '20px', borderBottom: '2px solid var(--color-dark)', display: 'flex', justifyContent: 'between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <h3 style={{ fontSize: '20px' }}>Controle de Candidaturas</h3>
-          <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: '12px' }} onClick={fetchApplications}>
+      {/* Applications Table Container (Responsivo por CSS com admin-table-container) */}
+      <div className="nb-card" style={{ padding: 0 }}>
+        <div style={{ padding: '20px', borderBottom: '2px solid var(--color-dark)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+          <h3 style={{ fontSize: '18px' }}>Controle de Candidaturas</h3>
+          <button className="btn btn-secondary" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: '12px', minHeight: '36px' }} onClick={fetchApplications}>
             <RefreshCw size={14} />
             <span>Atualizar Tabela</span>
           </button>
         </div>
 
-        {loading ? (
-          <div style={{ textAlign: 'center', padding: '48px', fontWeight: 600 }}>Carregando candidaturas...</div>
-        ) : applications.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px', color: 'var(--color-gray-dark)' }}>
-            Nenhuma candidatura registrada. Vá para o catálogo e inscreva-se em um bootcamp para ver o progresso aqui!
-          </div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
-            <thead>
-              <tr style={{ backgroundColor: 'var(--color-gray-light)', borderBottom: '2px solid var(--color-dark)' }}>
-                <th style={{ padding: '16px', fontWeight: 700 }}>Nome Social / Completo</th>
-                <th style={{ padding: '16px', fontWeight: 700 }}>E-mail</th>
-                <th style={{ padding: '16px', fontWeight: 700 }}>Bootcamp</th>
-                <th style={{ padding: '16px', fontWeight: 700 }}>Parceira</th>
-                <th style={{ padding: '16px', fontWeight: 700 }}>Status Atual</th>
-                <th style={{ padding: '16px', fontWeight: 700 }}>Acompanhamento / Notas</th>
-                <th style={{ padding: '16px', fontWeight: 700, textAlign: 'center' }}>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {applications.map(app => (
-                <tr key={app.id} style={{ borderBottom: '2px solid var(--color-gray-light)', transition: 'background-color 0.1s' }} className="table-row-hover">
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{app.user_name}</td>
-                  <td style={{ padding: '16px', color: 'var(--color-gray-dark)', fontSize: '14px' }}>{app.email}</td>
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{app.bootcamp_title}</td>
-                  <td style={{ padding: '16px', fontWeight: 600 }}>{app.company_name}</td>
-                  <td style={{ padding: '16px' }}>{getStatusBadge(app.status)}</td>
-                  <td style={{ padding: '16px', fontSize: '13px', color: 'var(--color-gray-dark)', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {app.feedback || 'Sem observações'}
-                  </td>
-                  <td style={{ padding: '16px', textAlign: 'center' }}>
-                    <button 
-                      className="btn" 
-                      style={{ padding: '6px 12px', fontSize: '12px' }}
-                      onClick={() => {
-                        setEditingApp(app);
-                        setNewStatus(app.status);
-                        setNewFeedback(app.feedback || '');
-                      }}
-                    >
-                      <Edit size={12} />
-                      <span>Gerenciar</span>
-                    </button>
-                  </td>
+        <div className="admin-table-container">
+          {loading ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <span>Carregando candidaturas...</span>
+            </div>
+          ) : applications.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px', color: 'var(--color-gray-dark)' }}>
+              Nenhuma candidatura registrada. Vá para o catálogo e inscreva-se em um bootcamp para ver o progresso aqui!
+            </div>
+          ) : (
+            <table className="admin-table">
+              <thead>
+                <tr style={{ backgroundColor: 'var(--color-gray-light)', borderBottom: '2px solid var(--color-dark)' }}>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>Nome Social / Completo</th>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>E-mail</th>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>Bootcamp</th>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>Parceira</th>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>Status Atual</th>
+                  <th style={{ padding: '16px', fontWeight: 700 }}>Acompanhamento / Notas</th>
+                  <th style={{ padding: '16px', fontWeight: 700, textAlign: 'center' }}>Ação</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              </thead>
+              <tbody>
+                {applications.map(app => (
+                  <tr key={app.id} style={{ borderBottom: '2px solid var(--color-gray-light)' }}>
+                    <td style={{ padding: '16px', fontWeight: 600 }}>{app.user_name}</td>
+                    <td style={{ padding: '16px', color: 'var(--color-gray-dark)', fontSize: '13px' }}>{app.email}</td>
+                    <td style={{ padding: '16px', fontWeight: 600 }}>{app.bootcamp_title}</td>
+                    <td style={{ padding: '16px', fontWeight: 600 }}>{app.company_name}</td>
+                    <td style={{ padding: '16px' }}>{getStatusBadge(app.status)}</td>
+                    <td style={{ padding: '16px', fontSize: '13px', color: 'var(--color-gray-dark)', maxWidth: '220px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {app.feedback || 'Sem observações'}
+                    </td>
+                    <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <button 
+                        className="btn" 
+                        style={{ padding: '6px 12px', fontSize: '12px', minHeight: '32px' }}
+                        onClick={() => {
+                          setEditingApp(app);
+                          setNewStatus(app.status);
+                          setNewFeedback(app.feedback || '');
+                        }}
+                      >
+                        <Edit size={12} />
+                        <span>Gerenciar</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Edit Status Modal */}
       {editingApp && (
         <div className="modal-overlay" onClick={() => { if (!isUpdating) setEditingApp(null); }}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '480px' }}>
-            <button className="modal-close" onClick={() => setEditingApp(null)} disabled={isUpdating}>X</button>
-            <h3 style={{ fontSize: '22px', marginBottom: '8px' }}>Gerenciar Candidata</h3>
-            <p style={{ fontSize: '14px', color: 'var(--color-gray-dark)', marginBottom: '20px' }}>
+            <button className="modal-close" onClick={() => setEditingApp(null)} disabled={isUpdating} aria-label="Fechar">X</button>
+            <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>Gerenciar Candidata</h3>
+            <p style={{ fontSize: '13px', color: 'var(--color-gray-dark)', marginBottom: '20px' }}>
               Atualize o status profissional de <strong>{editingApp.user_name}</strong> no bootcamp <strong>{editingApp.bootcamp_title}</strong>.
             </p>
 
