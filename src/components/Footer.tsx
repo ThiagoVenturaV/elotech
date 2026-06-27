@@ -5,7 +5,10 @@ export const Footer: React.FC = () => {
     <footer className="footer">
       <div className="footer-inner">
         <div className="footer-brand">
-          <div className="footer-logo">EloTech</div>
+          <div className="footer-logo" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/Icone.svg" alt="EloTech Logo" style={{ height: '36px', width: 'auto', filter: 'brightness(0) invert(1)' }} />
+            <span>EloTech</span>
+          </div>
           <p className="footer-subtext">
             © 2026 EloTech Hub. Soberania Tecnológica Trans e Nordestina. Feito com orgulho e resistência no Nordeste.
           </p>

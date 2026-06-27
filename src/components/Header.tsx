@@ -1,12 +1,27 @@
 import React, { useState } from 'react';
-import { LogIn, User, Menu, X } from 'lucide-react';
+import { LogOut, Menu, X, LogIn } from 'lucide-react';
+
+interface UserState {
+  name: string;
+  email: string;
+  role: 'candidate' | 'admin';
+}
 
 interface HeaderProps {
   currentTab: string;
   onTabChange: (tab: string) => void;
+  currentUser: UserState | null;
+  onLogout: () => void;
+  onLoginClick: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  currentTab, 
+  onTabChange, 
+  currentUser, 
+  onLogout, 
+  onLoginClick 
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLinkClick = (tab: string) => {
@@ -22,8 +37,10 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
           href="#" 
           className="logo" 
           onClick={(e) => { e.preventDefault(); handleLinkClick('home'); }}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
         >
-          EloTech
+          <img src="/Icone.svg" alt="EloTech Logo" style={{ height: '36px', width: 'auto' }} />
+          <span>EloTech</span>
         </a>
 
         {/* Hamburger toggle button for mobile */}
@@ -57,6 +74,8 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
           >
             Comunidade
           </a>
+          
+          {/* Restrição de link corporativo visual */}
           <a 
             href="#" 
             className={`nav-link ${currentTab === 'admin' ? 'active' : ''}`}
@@ -64,23 +83,31 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
           >
             Contratações
           </a>
-          
-          {/* Action button inside nav menu on mobile for easier touch */}
-          <div style={{ marginTop: '12px' }} className="mobile-action-container">
-            {currentTab === 'admin' ? (
-              <button 
-                className="btn btn-primary"
-                style={{ width: '100%' }}
-                onClick={() => handleLinkClick('home')}
-              >
-                <User size={16} />
-                <span>Sair Admin</span>
-              </button>
+
+          {/* User info & action drawer inside mobile menu */}
+          <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }} className="mobile-action-container">
+            {currentUser ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ padding: '8px', border: '1.5px solid var(--color-dark)', backgroundColor: 'var(--color-gray-light)', fontSize: '13px' }}>
+                  <div style={{ fontWeight: 700 }}>{currentUser.name}</div>
+                  <span className={`nb-badge ${currentUser.role === 'admin' ? 'badge-blue' : 'badge-magenta'}`} style={{ fontSize: '9px', padding: '2px 4px', marginTop: '4px' }}>
+                    {currentUser.role === 'admin' ? 'Parceira' : 'Aluna'}
+                  </span>
+                </div>
+                <button 
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  onClick={() => { onLogout(); setMenuOpen(false); }}
+                >
+                  <LogOut size={16} />
+                  <span>Sair</span>
+                </button>
+              </div>
             ) : (
               <button 
                 className="btn btn-magenta"
                 style={{ width: '100%' }}
-                onClick={() => handleLinkClick('admin')}
+                onClick={() => { onLoginClick(); setMenuOpen(false); }}
               >
                 <LogIn size={16} />
                 <span>Entrar</span>
@@ -89,20 +116,29 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
           </div>
         </nav>
         
-        {/* Visible only on Desktop */}
+        {/* User profile details & action buttons - Desktop view */}
         <div style={{ display: 'none' }} className="desktop-action-container">
-          {currentTab === 'admin' ? (
-            <button 
-              className="btn btn-primary"
-              onClick={() => handleLinkClick('home')}
-            >
-              <User size={16} />
-              <span>Sair Admin</span>
-            </button>
+          {currentUser ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '14px', fontWeight: 700 }}>{currentUser.name}</div>
+                <span className={`nb-badge ${currentUser.role === 'admin' ? 'badge-blue' : 'badge-magenta'}`} style={{ fontSize: '9px', padding: '1px 4px' }}>
+                  {currentUser.role === 'admin' ? 'Parceira' : 'Aluna'}
+                </span>
+              </div>
+              <button 
+                className="btn btn-secondary"
+                style={{ padding: '10px' }}
+                onClick={onLogout}
+                aria-label="Sair da conta"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           ) : (
             <button 
               className="btn btn-magenta"
-              onClick={() => handleLinkClick('admin')}
+              onClick={onLoginClick}
             >
               <LogIn size={16} />
               <span>Entrar</span>
@@ -112,7 +148,6 @@ export const Header: React.FC<HeaderProps> = ({ currentTab, onTabChange }) => {
       </div>
 
       <style>{`
-        /* Oculta/Exibe os containers de ação baseando-se em breakpoints */
         .mobile-action-container {
           display: block;
         }

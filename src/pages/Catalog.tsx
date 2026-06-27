@@ -15,7 +15,18 @@ interface Bootcamp {
   hiring_positions: number;
 }
 
-export const Catalog: React.FC = () => {
+interface UserState {
+  name: string;
+  email: string;
+  role: 'candidate' | 'admin';
+}
+
+interface CatalogProps {
+  currentUser: UserState | null;
+  onTriggerLogin: () => void;
+}
+
+export const Catalog: React.FC<CatalogProps> = ({ currentUser, onTriggerLogin }) => {
   const [bootcamps, setBootcamps] = useState<Bootcamp[]>([]);
   const [filteredBootcamps, setFilteredBootcamps] = useState<Bootcamp[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +44,7 @@ export const Catalog: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Erros de Validação (Heurística 5 e 9)
+  // Erros de Validação
   const [errors, setErrors] = useState<{ userName?: string; email?: string }>({});
 
   useEffect(() => {
@@ -49,6 +60,17 @@ export const Catalog: React.FC = () => {
         setLoading(false);
       });
   }, []);
+
+  // Preencher nome e e-mail se logado (Heurística 7: Flexibilidade e eficiência)
+  useEffect(() => {
+    if (currentUser) {
+      setUserName(currentUser.name);
+      setEmail(currentUser.email);
+    } else {
+      setUserName('');
+      setEmail('');
+    }
+  }, [currentUser, showApplyModal]);
 
   useEffect(() => {
     if (selectedTracks.length === 0) {
@@ -100,6 +122,13 @@ export const Catalog: React.FC = () => {
     e.preventDefault();
     if (!selectedBootcamp) return;
 
+    // Se não estiver logado, dispara login primeiro (Nielsen Heuristic 5)
+    if (!currentUser) {
+      setShowApplyModal(false);
+      onTriggerLogin();
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -121,15 +150,12 @@ export const Catalog: React.FC = () => {
       .then(() => {
         setIsSubmitting(false);
         setSubmitSuccess(true);
-        setUserName('');
-        setEmail('');
-        setGithubUrl('');
         setErrors({});
       })
       .catch(err => {
         console.error('Erro na inscrição:', err);
         setIsSubmitting(false);
-        alert('Erro de conexão ao realizar inscrição. Por favor, tente novamente mais tarde.');
+        alert('Erro ao realizar inscrição. Tente novamente mais tarde.');
       });
   };
 
@@ -154,7 +180,7 @@ export const Catalog: React.FC = () => {
         </p>
       </section>
 
-      {/* Mobile Filter Button (Heurística 7: Flexibilidade e eficiência) */}
+      {/* Mobile Filter Button */}
       <div className="mobile-filter-btn mb-16">
         <button 
           className="btn btn-secondary" 
@@ -166,7 +192,7 @@ export const Catalog: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Grid: Sidebar + List (Responsivo com catalog-layout) */}
+      {/* Main Grid: Sidebar + List */}
       <div className="catalog-layout">
         {/* Sidebar Filters */}
         <aside className={`nb-card filter-sidebar ${showMobileFilters ? 'open' : ''}`} style={{ padding: '20px' }}>
@@ -195,7 +221,7 @@ export const Catalog: React.FC = () => {
             })}
           </div>
 
-          {(selectedTracks.length > 0) && (
+          {selectedTracks.length > 0 && (
             <button 
               className="btn btn-secondary" 
               style={{ marginTop: '20px', width: '100%', padding: '8px 12px', fontSize: '12px', minHeight: '36px' }}
@@ -344,6 +370,12 @@ export const Catalog: React.FC = () => {
                   <form onSubmit={handleApply} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <h4 style={{ fontSize: '18px', borderBottom: '2px solid var(--color-dark)', paddingBottom: '8px' }}>Formulário de Inscrição</h4>
                     
+                    {!currentUser && (
+                      <div style={{ backgroundColor: 'var(--color-orange-light)', border: '2px solid var(--color-orange)', padding: '10px', fontSize: '13px', fontWeight: 600 }}>
+                        Faça login na plataforma para realizar inscrições nos bootcamps.
+                      </div>
+                    )}
+
                     <div>
                       <label style={{ display: 'block', fontSize: '14px', fontWeight: 700, marginBottom: '6px' }}>Nome Completo / Social</label>
                       <input 
@@ -355,7 +387,8 @@ export const Catalog: React.FC = () => {
                           setUserName(e.target.value);
                           if (errors.userName) setErrors(prev => ({ ...prev, userName: undefined }));
                         }}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!currentUser}
+                        readOnly={!!currentUser}
                       />
                       {errors.userName && <div className="error-message">{errors.userName}</div>}
                     </div>
@@ -371,7 +404,8 @@ export const Catalog: React.FC = () => {
                           setEmail(e.target.value);
                           if (errors.email) setErrors(prev => ({ ...prev, email: undefined }));
                         }}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!currentUser}
+                        readOnly={!!currentUser}
                       />
                       {errors.email && <div className="error-message">{errors.email}</div>}
                     </div>
@@ -384,7 +418,8 @@ export const Catalog: React.FC = () => {
                         placeholder="https://github.com/usuario"
                         value={githubUrl}
                         onChange={(e) => setGithubUrl(e.target.value)}
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !currentUser}
+                        readOnly={!currentUser}
                       />
                     </div>
 
@@ -394,7 +429,7 @@ export const Catalog: React.FC = () => {
                       style={{ marginTop: '8px', width: '100%' }}
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? 'Processando inscrição...' : 'Confirmar Inscrição no Bootcamp'}
+                      {!currentUser ? 'Entrar para se Inscrever' : isSubmitting ? 'Processando inscrição...' : 'Confirmar Inscrição no Bootcamp'}
                     </button>
                   </form>
                 ) : (
